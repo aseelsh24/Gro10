@@ -1,0 +1,76 @@
+{
+  "name": "pos-app",
+  "version": "1.0.0",
+  "description": "Offline Desktop POS Application",
+  "main": "electron.js",
+  "private": true,
+  "author": {
+    "name": "POS App Team"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "electron": "wait-on tcp:3000 && electron .",
+    "electron:dev": "concurrently \"npm run dev\" \"npm run electron\"",
+    "electron:build": "npm run build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^8.7.0",
+    "chart.js": "^4.4.0",
+    "csv-parse": "^5.5.0",
+    "csv-stringify": "^6.4.4",
+    "electron-is-dev": "^2.0.0",
+    "framer-motion": "^10.16.4",
+    "i18next": "^23.5.1",
+    "jspdf": "^2.5.1",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-i18next": "^13.2.2",
+    "react-icons": "^4.11.0",
+    "react-router-dom": "^6.16.0",
+    "zustand": "^4.4.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.4",
+    "@types/better-sqlite3": "^7.6.5",
+    "@types/node": "^20.19.20",
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.15",
+    "concurrently": "^8.2.1",
+    "electron": "^26.2.1",
+    "electron-builder": "^24.6.4",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "postcss": "^8.4.29",
+    "tailwindcss": "^3.3.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.posapp.app",
+    "mac": {
+      "category": "public.app-category.business"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.js",
+      "preload.js"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.shadow-neumorph {
+  box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+}
+
+.shadow-neumorph-inset {
+  box-shadow: inset 20px 20px 60px #bebebe, inset -20px -20px 60px #ffffff;
+}
+
+[dir="rtl"] .shadow-neumorph {
+  box-shadow: -20px 20px 60px #bebebe, 20px -20px 60px #ffffff;
+}
+
+[dir="rtl"] .shadow-neumorph-inset {
+  box-shadow: inset -20px 20px 60px #bebebe, inset 20px -20px 60px #ffffff;
+}
