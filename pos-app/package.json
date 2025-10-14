@@ -1,11 +1,11 @@
 {
-  "name": "pos-app",
+  "name": "smart-pos",
   "version": "1.0.0",
-  "description": "Offline Desktop POS Application",
+  "description": "Aseel smart soft pos - نظام نقاط بيع مكتبي ذكي لإدارة المحلات التجارية.",
   "main": "electron.js",
   "private": true,
   "author": {
-    "name": "POS App Team"
+    "name": "Aseel smart soft pos"
   },
   "scripts": {
     "dev": "vite",
@@ -60,7 +60,10 @@
     "wait-on": "^7.0.1"
   },
   "build": {
-    "appId": "com.posapp.app",
+    "appId": "com.aseel.smartpos",
+    "productName": "smart POS",
+    "companyName": "Aseel smart soft pos",
+    "description": "Aseel smart soft pos - نظام نقاط بيع مكتبي ذكي لإدارة المحلات التجارية.",
     "mac": {
       "category": "public.app-category.business"
     },
@@ -71,6 +74,9 @@
       "dist/**/*",
       "electron.js",
       "preload.js"
-    ]
+    ],
+    "win": {
+      "icon": "assets/icon.ico"
+    }
   }
 }
