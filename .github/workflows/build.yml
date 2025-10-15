@@ -6,16 +6,10 @@ on:
       - main
     tags:
       - 'v*.*.*'
-  pull_request:
-    branches:
-      - main
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
       # الخطوة 1: جلب المستودع
@@ -26,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'  # تحديث إلى Node.js 20 (أحدث إصدار LTS)
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: 'pos-app/package-lock.json'
 
@@ -35,14 +29,9 @@ jobs:
         run: npm ci
         working-directory: pos-app
 
-      # الخطوة 4: بناء التطبيق
-      - name: Build application
-        run: npm run build
-        working-directory: pos-app
-
-      # الخطوة 5: بناء وإصدار Electron
+      # الخطوة 4: بناء وإصدار Electron
       - name: Build and release Electron
-        uses: samuelmeuli/action-electron-builder@v2  # تحديث إلى v2
+        uses: samuelmeuli/action-electron-builder@v1.6.0  # استخدام إصدار محدد
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           package_root: pos-app
