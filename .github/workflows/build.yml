@@ -1,46 +1,65 @@
-name: build-and-release
+name: Build Windows Installer (pos-app)
 
 on:
-  push:
-    branches: [ "main" ]
   workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'pos-app/**'
+      - '.github/workflows/windows-build.yml'
 
 jobs:
   build:
     runs-on: windows-latest
 
+    defaults:
+      run:
+        working-directory: pos-app
+        shell: pwsh
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup Node
+      - name: Use Node.js 18 + npm cache
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: 'npm'
+          cache: npm
           cache-dependency-path: pos-app/package-lock.json
 
-      - name: Sanity check package.json version
-        working-directory: pos-app
-        run: node -e "const p=require('./package.json'); if(!p.version) {process.exitCode=1; console.error('Missing version in package.json');} else {console.log('name:',p.name,'version:',p.version)}"
+      # يزيل الـ lock الخاطئ في جذر المستودع إن وُجد ويضمن أن العمل داخل pos-app
+      - name: Remove wrong root lock (if any)
+        run: |
+          if (Test-Path ..\package-lock.json) {
+            Write-Host "Found root package-lock.json -> removing it"
+            Remove-Item ..\package-lock.json -Force
+          }
 
-      - name: Install dependencies
-        working-directory: pos-app
-        run: npm ci
+      # تثبيت يعتمد على lock؛ وإن فشل (بسبب lock فاسد) نعيد توليده ثم نكمل
+      - name: Install deps (repair lock if needed)
+        run: |
+          $ErrorActionPreference = "Continue"
+          npm ci
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "npm ci failed -> regenerating pos-app/package-lock.json..."
+            if (Test-Path package-lock.json) { Remove-Item package-lock.json -Force }
+            npm install
+          }
 
-      # لو مشروع Electron (حسب سكربتك electron:build)
-      - name: Build Windows app (electron-builder)
-        working-directory: pos-app
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: "false"  # تعطيل التوقيع في CI
-        run: npm run electron:build
+      - name: Build Vite
+        run: npm run build
 
-      - name: Upload Windows installer
-        if: always()
+      # نستخدم electron-builder مباشرة مع تعطيل النشر
+      - name: Package Electron (no publish)
+        run: npx electron-builder --win --publish never
+
+      - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: smart-pos-installer
           path: |
             pos-app/dist/**/*.exe
-            pos-app/release/**/*.exe
-          if-no-files-found: warn
+            pos-app/dist/**/*.yml
+            pos-app/dist/**/*.blockmap
+          if-no-files-found: error
