@@ -2,39 +2,45 @@ name: build-and-release
 
 on:
   push:
-    branches:
-      - main  # Trigger the workflow for commits pushed to the main branch
-    tags:
-      - 'v1.0.0'  # Run on version tags like v1.0.0 to create releases automatically
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [windows-latest]  # Specify the OS to build on (use windows to generate .exe)
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
-      # 1. Check out the repository
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v3
 
-      # 2. Set up Node.js
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: pos-app/package-lock.json
 
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: npm install
+      - name: Sanity check package.json version
         working-directory: pos-app
+        run: node -e "const p=require('./package.json'); if(!p.version) {process.exitCode=1; console.error('Missing version in package.json');} else {console.log('name:',p.name,'version:',p.version)}"
 
-      # 4. Build and release using electron-builder
-      - name: Build and Release
-        uses: samuelmeuli/action-electron-builder@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Install dependencies
+        working-directory: pos-app
+        run: npm ci
+
+      # لو مشروع Electron (حسب سكربتك electron:build)
+      - name: Build Windows app (electron-builder)
+        working-directory: pos-app
         env:
-          NODE_ENV: production
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"  # تعطيل التوقيع في CI
+        run: npm run electron:build
+
+      - name: Upload Windows installer
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-pos-installer
+          path: |
+            pos-app/dist/**/*.exe
+            pos-app/release/**/*.exe
+          if-no-files-found: warn
