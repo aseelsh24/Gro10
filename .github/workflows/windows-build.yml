@@ -1,0 +1,65 @@
+name: Build Windows Installer (pos-app)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'pos-app/**'
+      - '.github/workflows/windows-build.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        working-directory: pos-app
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 18 + npm cache
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: pos-app/package-lock.json
+
+      # إزالة أي package-lock.json في الجذر (كان يسبب خطأ Invalid Version)
+      - name: Remove wrong root lock (if any)
+        run: |
+          if (Test-Path ..\package-lock.json) {
+            Write-Host "Found root package-lock.json -> removing it"
+            Remove-Item ..\package-lock.json -Force
+          }
+
+      # تثبيت بالـ lock، وإن فشل نعيد توليد lock ثم نكمل
+      - name: Install deps (repair lock if needed)
+        run: |
+          $ErrorActionPreference = "Continue"
+          npm ci
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "npm ci failed -> regenerating pos-app/package-lock.json..."
+            if (Test-Path package-lock.json) { Remove-Item package-lock.json -Force }
+            npm install
+          }
+
+      - name: Build Vite
+        run: npm run build
+
+      # تغليف Electron بدون نشر
+      - name: Package Electron (no publish)
+        run: npx electron-builder --win --publish never
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-pos-installer
+          path: |
+            pos-app/dist/**/*.exe
+            pos-app/dist/**/*.yml
+            pos-app/dist/**/*.blockmap
+          if-no-files-found: error
