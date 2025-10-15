@@ -3,33 +3,47 @@ name: build-and-release
 on:
   push:
     branches:
-      - main  # Trigger the workflow for commits pushed to the main branch
+      - main
     tags:
-      - 'v*.*.*'  # Run on version tags like v1.0.0 to create releases automatically
+      - 'v*.*.*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest]  # Specify the OS to build on (use windows to generate .exe)
+        os: [windows-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
-      # 1. Check out the repository
+      # الخطوة 1: جلب المستودع
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. Set up Node.js with the version used in the project
+      # الخطوة 2: إعداد Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'  # تحديث إلى Node.js 20 (أحدث إصدار LTS)
+          cache: 'npm'
+          cache-dependency-path: 'pos-app/package-lock.json'
 
-      # 3. Build the Electron app and optionally create a release
-      - name: Build and (optionally) release
-        uses: samuelmeuli/action-electron-builder@v1
+      # الخطوة 3: تثبيت الاعتماديات
+      - name: Install dependencies
+        run: npm ci
+        working-directory: pos-app
+
+      # الخطوة 4: بناء التطبيق
+      - name: Build application
+        run: npm run build
+        working-directory: pos-app
+
+      # الخطوة 5: بناء وإصدار Electron
+      - name: Build and release Electron
+        uses: samuelmeuli/action-electron-builder@v2  # تحديث إلى v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-           package_root: pos-app
-          # When a version tag is pushed (e.g., v1.0.0), the action creates a release
+          package_root: pos-app
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
