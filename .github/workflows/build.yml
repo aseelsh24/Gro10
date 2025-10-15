@@ -5,7 +5,7 @@ on:
     branches:
       - main  # Trigger the workflow for commits pushed to the main branch
     tags:
-      - 'v*.*.*'  # Run on version tags like v1.0.0 to create releases automatically
+      - 'v1.0.0'  # Run on version tags like v1.0.0 to create releases automatically
 
 jobs:
   build:
