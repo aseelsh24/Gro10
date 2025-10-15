@@ -3,36 +3,38 @@ name: build-and-release
 on:
   push:
     branches:
-      - main
+      - main  # Trigger the workflow for commits pushed to the main branch
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*'  # Run on version tags like v1.0.0 to create releases automatically
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest]  # Specify the OS to build on (use windows to generate .exe)
+    runs-on: ${{ matrix.os }}
 
     steps:
-      # الخطوة 1: جلب المستودع
+      # 1. Check out the repository
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # الخطوة 2: إعداد Node.js
+      # 2. Set up Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'pos-app/package-lock.json'
+          node-version: '18'
 
-      # الخطوة 3: تثبيت الاعتماديات
+      # 3. Install dependencies
       - name: Install dependencies
-        run: npm ci
+        run: npm install
         working-directory: pos-app
 
-      # الخطوة 4: بناء وإصدار Electron
-      - name: Build and release Electron
-        uses: samuelmeuli/action-electron-builder@v1.6.0  # استخدام إصدار محدد
+      # 4. Build and release using electron-builder
+      - name: Build and Release
+        uses: samuelmeuli/action-electron-builder@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          package_root: pos-app
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          NODE_ENV: production
